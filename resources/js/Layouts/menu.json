@@ -1,0 +1,38 @@
+[
+    {
+        "name": "Merchants",
+        "path": "merchants.index"
+    },
+    {
+        "name": "Merchant Transactions",
+        "path": "transactions.index"
+    },
+    {
+        "name": "Ranking",
+        "path": "rankings.index"
+    },
+    {
+        "name": "Role",
+        "path": "roles.index"
+    },
+    {
+        "name": "User",
+        "path": "users.index"
+    },
+    {
+        "name": "User Transaction",
+        "path": "usertransactions.index"
+    },
+    {
+        "name": "Permission Group",
+        "path": "permissiongroups.index"
+    },
+    {
+        "name": "Permission",
+        "path": "permissions.index"
+    },
+    {
+        "name": "Activity Log",
+        "path": "activitylogs.index"
+    }
+]
