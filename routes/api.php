@@ -49,7 +49,7 @@ Route::middleware('api')->namespace('Api')->group(function () {
 
                 Route::get('wallets', 'walletIndex');
 
-                Route::post('wallets/{wallet}', 'walletUpdate');
+                Route::post('wallets', 'walletStore');
 
                 Route::post('set-security-pin', 'setSecurityPin');
 

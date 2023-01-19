@@ -35,7 +35,8 @@ const props = defineProps({
 })
 const form = ref(null)
 
-
+console.log(props.permissions)
+console.log(props.rolePermissions);
 onMounted(() => {
     form.value.setFieldValue('permissions', props.rolePermissions);
 })

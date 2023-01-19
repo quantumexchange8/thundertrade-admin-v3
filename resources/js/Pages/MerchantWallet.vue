@@ -60,6 +60,9 @@ const columns = [
     { name: 'deposit_balance', label: 'Deposit Balance', field: 'deposit_balance', sortable: true, align: 'left' },
     { name: 'gross_deposit', label: 'Gross Deposit', field: 'gross_deposit', sortable: true, align: 'left' },
     { name: 'gross_withdrawal', label: 'Gross Withdrawal', field: 'gross_withdrawal', sortable: true, align: 'left' },
+    { name: 'net_deposit', label: 'Net Deposit', field: 'net_deposit', sortable: true, align: 'left' },
+    { name: 'net_withdrawal', label: 'Net Withdrawal', field: 'net_withdrawal', sortable: true, align: 'left' },
+
     { name: 'wallet_address', label: 'Wallet Address', field: 'wallet_address', sortable: true, align: 'left' },
     { name: 'type', label: 'Type', field: 'type', sortable: true, align: 'left' },
     { name: 'actions', label: 'Actions', field: 'actions', sortable: false, align: 'left', hidden: true },

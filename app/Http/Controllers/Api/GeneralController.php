@@ -74,20 +74,30 @@ class GeneralController extends Controller
     public function walletIndex(Request $request)
     {
         $merchant = Auth::user()->merchant;
-        $wallets = MerchantWallet::where('merchant_id', $merchant)->get();
+        $wallets = MerchantWallet::where('merchant_id', $merchant->id)->get();
         return response()->json(['success' => true, 'data' => $wallets]);
     }
 
-    public function walletUpdate(Request $request, $wallet)
+    public function walletStore(Request $request)
     {
         if (Gate::denies('check-permission', 'allow-change-protocol')) {
             return response()->json(['success' => false, 'message' => 'Not enough Permission'], 403);
         }
-        $request->validate(['wallet_address' => ['required']]);
+        $request->validate([
+            'erc20_address' => ['required'],
+            'trc20_address' => ['required'],
+            'btc_address' => ['required']
+        ]);
         $merchant = Auth::user()->merchant;
-        $wallet = MerchantWallet::where('merchant_id', $merchant)->where('id', $wallet)->first();
-        $wallet->wallet_address = $request->wallet_address;
-        $wallet->save();
+        $ERC20Wallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', 'ERC20')->first();
+        $ERC20Wallet->wallet_address = $request->erc20_address;
+        $ERC20Wallet->save();
+        $TRC20Wallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', 'TRC20')->first();
+        $TRC20Wallet->wallet_address = $request->trc20_address;
+        $TRC20Wallet->save();
+        $BTCWallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', 'BTC')->first();
+        $BTCWallet->wallet_address = $request->btc_address;
+        $BTCWallet->save();
         return response()->json(['success' => true, 'message' => 'Update Wallet Address Success']);
     }
 

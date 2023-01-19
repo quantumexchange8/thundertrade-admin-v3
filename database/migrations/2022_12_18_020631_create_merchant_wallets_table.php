@@ -19,6 +19,8 @@ return new class extends Migration
             $table->decimal('deposit_balance', 13, 2)->default(0);
             $table->decimal('gross_deposit', 13, 2)->default(0);
             $table->decimal('gross_withdrawal', 13, 2)->default(0);
+            $table->decimal('net_deposit', 13, 2)->default(0);
+            $table->decimal('net_withdrawal', 13, 2)->default(0);
             $table->string('wallet_address')->nullable();
             $table->string('type');
             $table->foreignId('merchant_id')->constrained('merchants');
