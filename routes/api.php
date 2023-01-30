@@ -74,6 +74,8 @@ Route::middleware('api')->namespace('Api')->group(function () {
                 Route::get('transactions/{transaction}', 'transactionShow');
 
                 Route::post('settings', 'userSettingStore');
+
+                Route::get('logs', 'activityLogIndex');
             });
         });
     });

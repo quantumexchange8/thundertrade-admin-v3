@@ -206,7 +206,7 @@ class GeneralController extends Controller
         return response()->json(['success' => true, 'message' => 'Delete Sub Admin Success']);
     }
 
-    public function ActivityLogIndex()
+    public function activityLogIndex()
     {
         $user = Auth::user();
         $merchant = $user->merchant;
