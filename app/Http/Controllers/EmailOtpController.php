@@ -99,7 +99,7 @@ class EmailOtpController extends Controller
                     'code' => $code,
                     'created_at' => now()
                 ]);
-                Mail::to($email)->send(new VerificationEmail($user->name, $code));
+                Mail::to($email)->send(new VerificationEmail($code));
                 return response()->json(['success' => true, 'message' => 'Resent Email']);
             } else {
 
@@ -111,7 +111,7 @@ class EmailOtpController extends Controller
 
 
 
-        Mail::to($email)->send(new VerificationEmail($user->name, $code));
+        Mail::to($email)->send(new VerificationEmail($code));
 
         return response()->json(['success' => true, 'message' => 'Email Sent']);
     }
