@@ -3,7 +3,7 @@
     <Head title="Permission" />
     <Table :columns="columns" :url="url" ref="tableData" :search="search">
         <template #top-left1>
-            <q-btn outline label="create" @click="openPermissionFormModal" />
+            <q-btn outline label="create" @click="openPermissionFormModal('create')" />
         </template>
         <template #body-cell-actions="slotProps">
             <q-td class="text-center">

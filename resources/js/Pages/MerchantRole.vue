@@ -3,7 +3,7 @@
     <Head title="Role" />
     <Table :columns="columns" :url="url" ref="tableData">
         <template #top-left1>
-            <q-btn outline label="create" ref="createModal" @click="openMerchantRoleFormModal('create')" />
+            <q-btn outline label="create" @click="openMerchantRoleFormModal('create')" />
         </template>
         <template #body-cell-actions="slotProps">
             <q-td class="text-center">
@@ -27,7 +27,6 @@ const formModal = ref(false);
 const rowData = ref(null);
 
 const tableData = ref(null);
-const createModal = ref(null);
 const $q = useQuasar();
 
 const columns = [
