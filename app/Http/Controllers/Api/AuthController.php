@@ -62,7 +62,6 @@ class AuthController extends Controller
 
         $request->validate([
             'email' => 'required|email',
-            'tac' => 'required'
         ]);
 
         $email = $request->email;
@@ -76,7 +75,7 @@ class AuthController extends Controller
         }
 
         $request->validate([
-            'otp' => ['required', new OtpVerify($email, 'forgot_password')],
+            'tac' => ['required', new OtpVerify($email, 'forgot_password')],
         ]);
 
         EmailOtp::where('email', $email)->delete();
