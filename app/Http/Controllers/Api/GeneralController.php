@@ -184,7 +184,7 @@ class GeneralController extends Controller
         return response()->json(['success' => true, 'message' => 'Create Sub Admin Success']);
     }
 
-    public function userDestroy(Request $request, $user)
+    public function userDestroy(Request $request, $id)
     {
         if (Gate::denies('check-permission', 'allow-delete-sub-admin')) {
             return response()->json(['success' => false, 'message' => 'Not enough Permission'], 403);
@@ -199,7 +199,7 @@ class GeneralController extends Controller
             return response()->json(['message' => 'Security pin does not match']);
         }
 
-        $rec = User::where('merchant_id', $merchant->id)->where('id', $user)->first();
+        $rec = User::where('merchant_id', $merchant->id)->where('id', $id)->first();
 
         $rec->delete();
 
