@@ -327,7 +327,7 @@ class GeneralController extends Controller
             ->when($request->status, function ($query, $search) {
                 $query->where('status', $search);
             })
-            ->when($request->status, function ($query, $search) {
+            ->when($request->transaction_type, function ($query, $search) {
                 $query->where('transaction_type', $search);
             })
             ->when($request->start_date, function ($query, $search) {
