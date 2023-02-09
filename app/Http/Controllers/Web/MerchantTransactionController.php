@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\MerchantTransaction;
+use App\Models\MerchantWallet;
+use App\Models\Ranking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -74,21 +76,61 @@ class MerchantTransactionController extends Controller
     public function update(Request $request, $id)
     {
         $rec = MerchantTransaction::find($id);
-        $rec->update([
-            'status' => $request->status,
-            'approval_reason' => $request->approval_reason,
-            'approval_by' => Auth::id(),
-            'approval_date' => today(),
-        ]);
-
-        if ($request->status == 2) {
+        if ($rec->status == 0) {
+            $wallet = MerchantWallet::find($rec->wallet_id);
             $merchant = $rec->merchant;
-            Http::post($merchant->notify_url, ['transaction_no' => $rec->transaction_no, 'status' => $request->status]);
-        }
+            if ($request->status == 2) {
+                if ($rec->transaction_type == "deposit") {
 
+                    $wallet->deposit_balance += $rec->amount;
+                    $wallet->gross_deposit += $rec->amount;
+                    $wallet->net_deposit += $rec->total;
+                    $wallet->save();
+
+
+                    $total_deposit = MerchantWallet::where('merchant_id', $merchant->id)->sum('gross_deposit');
+                    $ranking = Ranking::where('amount', '<=', $total_deposit)->orderBy('amount', 'desc')->first();
+                    if ($ranking) {
+                        if ($ranking->id != $merchant->ranking_id) {
+                            $merchant->update(['ranking_id' => $ranking->id]);
+                        }
+                    }
+                } else if ($rec->transaction_type == "withdrawal") {
+
+                    if ($wallet->deposit_balance < $rec->amount) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Insufficient balance',
+                        ]);
+                    };
+
+                    $wallet->deposit_balance -= $rec->amount;
+                    $wallet->gross_withdrawal += $rec->amount;
+                    $wallet->net_withdrawal += $rec->total;
+                    $wallet->save();
+                }
+            } else if ($request->status == 1) {
+            }
+
+            $rec->update([
+                'status' => $request->status,
+                'approval_reason' => $request->approval_reason,
+                'approval_by' => Auth::id(),
+                'approval_date' => today(),
+            ]);
+
+            if ($rec->channel == 'website') {
+                Http::post($merchant->notify_url, ['transaction_no' => $rec->merchant_transaction_no, 'status' => $request->status]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Success',
+            ]);
+        }
         return response()->json([
-            'success' => true,
-            'message' => 'Success',
+            'success' => false,
+            'message' => 'Already approved',
         ]);
     }
 

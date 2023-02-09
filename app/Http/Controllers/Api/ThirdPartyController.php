@@ -43,7 +43,8 @@ class ThirdPartyController extends Controller
             return response()->json(['message' => "Invalid signature"]);
         }
         $wallet = MerchantWallet::where('merchant_id', $result['merchantId'])->where('type', $result['currency'])->first();
-
+        $charges = $result['amount'] * ($merchant->ranking->deposit / 100);
+        $total = $result['amount'] - $charges;
 
         $transaction_no = RunningNumberService::getID('transaction_number');
         //https://stackoverflow.com/a/63033291
@@ -61,16 +62,69 @@ class ThirdPartyController extends Controller
             'address' => $result['address'],
             'currency' => $result['currency'],
             'amount' => $result['amount'],
+            'charges' => $charges,
+            'total' => $total,
             'TxID' => $result['TxID'],
             'receipt' => $path,
             'transaction_type' => 'deposit',
             'wallet_id' => $wallet->id,
+            'channel' => 'website'
         ]);
 
         return response()->json(['message' => 'Success']);
     }
 
+    public function withdrawal(Request $request)
+    {
 
+        $data = $request->validate([
+            'merchantId' => ['required', 'exists:merchants,id'],
+            'merchantOrderNo' => ['required'],
+            'address' => ['required'],
+            'currency' => ['required', 'in:TRC20,ERC20,BTC'],
+            'amount' => ['required', 'numeric'],
+            'sign' => ['required'],
+        ]);
+
+
+        $merchant = Merchant::find($data['merchantId']);
+        $result = [
+            'merchantId' => $data['merchantId'],
+            'merchantOrderNo' => $this->decrypt($data['merchantOrderNo'], $merchant->api_key),
+            'address' =>  $this->decrypt($data['address'], $merchant->api_key),
+            'currency' =>  $this->decrypt($data['currency'], $merchant->api_key),
+            'amount' =>  $this->decrypt($data['amount'], $merchant->api_key),
+            'sign' =>  $data['sign'],
+        ];
+
+        $signature =   $this->sign($request->only('merchantId', 'merchantOrderNo', 'address', 'currency', 'amount'));
+
+        if ($result['sign'] != $signature) {
+            return response()->json(['message' => "Invalid signature"]);
+        }
+        $wallet = MerchantWallet::where('merchant_id', $result['merchantId'])->where('type', $result['currency'])->first();
+        $charges = $result['amount'] * ($merchant->ranking->withdrawal / 100);
+        $total = $result['amount'] - $charges;
+
+        $transaction_no = RunningNumberService::getID('transaction_number');
+
+
+        MerchantTransaction::create([
+            'transaction_no' => $transaction_no,
+            'merchant_transaction_no' => $result['merchantOrderNo'],
+            'merchant_id' => $result['merchantId'],
+            'address' => $result['address'],
+            'currency' => $result['currency'],
+            'amount' => $result['amount'],
+            'charges' => $charges,
+            'total' => $total,
+            'transaction_type' => 'withdrawal',
+            'wallet_id' => $wallet->id,
+            'channel' => 'website'
+        ]);
+
+        return response()->json(['message' => 'Success']);
+    }
 
 
 

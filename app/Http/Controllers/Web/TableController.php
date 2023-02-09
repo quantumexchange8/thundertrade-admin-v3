@@ -11,7 +11,6 @@ use App\Models\PermissionGroup;
 use App\Models\Ranking;
 use App\Models\Role;
 use App\Models\User;
-use App\Models\UserTransaction;
 use App\Traits\ExportableTrait;
 use App\Traits\SearchableTrait;
 use Illuminate\Http\Request;
@@ -34,7 +33,7 @@ class TableController extends Controller
 
     public function TransactionTable(Request $request)
     {
-        $query = $this->search(MerchantTransaction::class, ['wallet:id,wallet_number', 'merchant:id,name']);
+        $query = $this->search(MerchantTransaction::class, ['wallet:id,wallet_number', 'merchant:id,name', 'adminUser:id,name']);
 
         if ($request->export) {
             return $this->export($query, $request->type);
@@ -82,15 +81,6 @@ class TableController extends Controller
         return $query->paginate($request->rowsPerPage);
     }
 
-    public function UserTransactionTable(Request $request)
-    {
-        $query = $this->search(UserTransaction::class, ['merchant:id,name', 'wallet:id,wallet_number', 'user:id,name', 'adminUser:id,name']);
-
-        if ($request->export) {
-            return $this->export($query, $request->type);
-        }
-        return $query->paginate($request->rowsPerPage);
-    }
 
     public function PermissionTable(Request $request)
     {
@@ -147,18 +137,7 @@ class TableController extends Controller
 
     public function MerchantTransactionTable(Request $request, $merchant)
     {
-        $query = $this->search(MerchantTransaction::class, ['wallet:id,wallet_number'])
-            ->where('merchant_id', $merchant);
-
-        if ($request->export) {
-            return $this->export($query, $request->type);
-        }
-        return $query->paginate($request->rowsPerPage);
-    }
-
-    public function MerchantUserTransactionTable(Request $request, $merchant)
-    {
-        $query = $this->search(UserTransaction::class, ['wallet:id,wallet_number', 'user:id,name', 'adminUser:id,name'])
+        $query = $this->search(MerchantTransaction::class, ['wallet:id,wallet_number', 'adminUser:id,name'])
             ->where('merchant_id', $merchant);
 
         if ($request->export) {

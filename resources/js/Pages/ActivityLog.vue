@@ -31,8 +31,8 @@ const subject = (row) => {
     let modelPath = row.subject_type.split("\\");
     let model = modelPath.pop();
     let d = `(${model})`;
-    if (model === 'UserTransaction') {
-        d += row.subject?.transaction_number;
+    if (model === 'Merchant') {
+        d += row.subject?.transaction_no;
     } else if (model === 'Ranking') {
         d += row.subject?.level;
     } else {

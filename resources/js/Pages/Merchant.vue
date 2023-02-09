@@ -81,7 +81,6 @@ const actionLists = [
     { label: 'Manage Role', value: 'manage-role' },
     { label: 'Manage Wallet', value: 'manage-wallet' },
     { label: 'Manage Transction', value: 'manage-transaction' },
-    { label: 'Manage User Transction', value: 'manage-user-transaction' },
 
 ]
 const onItemClick = (action, data) => {
@@ -98,9 +97,6 @@ const onItemClick = (action, data) => {
         Inertia.visit(route('merchants.wallets.index', { merchant: data.id }));
     } else if (action == "manage-transaction") {
         Inertia.visit(route('merchants.transactions.index', { merchant: data.id }));
-    }
-    else if (action == 'manage-user-transaction') {
-        Inertia.visit(route('merchants.usertransactions.index', { merchant: data.id }));
     }
 }
 

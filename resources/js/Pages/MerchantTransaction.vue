@@ -4,7 +4,8 @@
     <Table :columns="columns" :url="url" ref="tableData">
         <template #body-cell-actions="slotProps">
             <q-td class="text-center">
-                <ActionButtonDropdown :data="slotProps.row" :lists="actionLists" @itemClick="onItemClick" />
+                <ActionButtonDropdown v-if="slotProps.row.status == 0" :data="slotProps.row" :lists="actionLists"
+                    @itemClick="onItemClick" />
             </q-td>
         </template>
     </Table>
@@ -52,7 +53,11 @@ const onItemClick = (action, data) => {
     }
 }
 
-
+const paymentStatus = {
+    0: 'Pending',
+    1: 'Rejected',
+    2: 'Approved',
+}
 const columns = [
     {
         name: 'id',
@@ -62,9 +67,16 @@ const columns = [
         align: 'left'
     },
     {
+        name: 'channel',
+        label: 'Channel',
+        field: 'channel',
+        sortable: true,
+        align: 'left'
+    },
+    {
         name: 'status',
         label: 'Status',
-        field: 'status',
+        field: (r) => paymentStatus[r.status],
         sortable: true,
         align: 'left'
     },
@@ -132,9 +144,9 @@ const columns = [
         align: 'left'
     },
     {
-        name: 'approval_by',
-        label: 'Approval By',
-        field: 'approval_by',
+        name: 'adminUser.name',
+        label: 'Approved By',
+        field: row => row.admin_user?.name,
         sortable: true,
         align: 'left'
     },
@@ -146,12 +158,13 @@ const columns = [
         align: 'left'
     },
     {
-        name: 'merchant_transaction_id',
-        label: 'Merchant Transaction ID',
-        field: 'merchant_transaction_id',
+        name: 'merchant_transaction_no',
+        label: 'Merchant Transaction No',
+        field: 'merchant_transaction_no',
         sortable: true,
         align: 'left'
     },
+
     {
         name: 'actions',
         label: 'Actions',

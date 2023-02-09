@@ -23,6 +23,17 @@ class MerchantTransaction extends Model
     {
         return $this->belongsTo(MerchantWallet::class, 'wallet_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function adminUser()
+    {
+        return $this->belongsTo(User::class, 'approval_by');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()->logAll();

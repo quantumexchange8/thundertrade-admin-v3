@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Exports\UserTransactionExport;
+use App\Exports\MerchantTransactionExport;
 use App\Http\Controllers\Controller;
 use App\Models\Merchant;
+use App\Models\MerchantTransaction;
 use App\Models\MerchantWallet;
 use App\Models\Permission;
 use App\Models\PermissionGroup;
@@ -12,7 +13,6 @@ use App\Models\Ranking;
 use App\Models\Role;
 use App\Models\RolePermission;
 use App\Models\User;
-use App\Models\UserTransaction;
 use App\Rules\OtpVerify;
 use App\Services\RunningNumberService;
 use Illuminate\Http\Request;
@@ -259,22 +259,26 @@ class GeneralController extends Controller
         $user = Auth::user();
         $merchant = $user->merchant;
         $wallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', $data['currency'])->first();
-
+        $charges = $data['amount'] * ($merchant->ranking->deposit / 100);
+        $total = $data['amount'] - $charges;
         $transaction_no = RunningNumberService::getID('transaction_number');
 
         $path = $request->file('receipt')->store('uploads/transactions');
 
-        UserTransaction::create([
+        MerchantTransaction::create([
             'transaction_no' => $transaction_no,
             'user_id' => $user->id,
             'merchant_id' => $merchant->id,
             'address' => $data['address'],
             'currency' => $data['currency'],
             'amount' => $data['amount'],
+            'charges' => $charges,
+            'total' => $total,
             'TxID' => $data['TxID'],
             'receipt' => $path,
             'transaction_type' => 'deposit',
             'wallet_id' => $wallet->id,
+            'channel' => 'merchant'
         ]);
 
         return response()->json(['success' => true, 'message' => 'Deposit Success']);
@@ -300,19 +304,23 @@ class GeneralController extends Controller
         }
 
         $wallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', $data['currency'])->first();
-
+        $charges = $data['amount'] * ($merchant->ranking->withdrawal / 100);
+        $total = $data['amount'] - $charges;
         $transaction_no = RunningNumberService::getID('transaction_number');
 
 
-        UserTransaction::create([
+        MerchantTransaction::create([
             'transaction_no' => $transaction_no,
             'user_id' => $user->id,
             'merchant_id' => $merchant->id,
             'address' => $data['address'],
             'currency' => $data['currency'],
             'amount' => $data['amount'],
+            'charges' => $charges,
+            'total' => $total,
             'transaction_type' => 'withdrawal',
             'wallet_id' => $wallet->id,
+            'channel' => 'merchant'
         ]);
 
         return response()->json(['success' => true, 'message' => 'Withdrawal Success']);
@@ -322,7 +330,7 @@ class GeneralController extends Controller
     {
         $user = Auth::user();
         $merchant = $user->merchant;
-        $transactions = UserTransaction::query()
+        $transactions = MerchantTransaction::query()
             ->where('merchant_id', $merchant->id)
             ->when($request->status, function ($query, $search) {
                 $query->where('status', $search);
@@ -340,7 +348,7 @@ class GeneralController extends Controller
 
 
         if ($request->export) {
-            return (new UserTransactionExport($transactions))->download('transaction.pdf', \Maatwebsite\Excel\Excel::DOMPDF);
+            return (new MerchantTransactionExport($transactions))->download('transaction.pdf', \Maatwebsite\Excel\Excel::DOMPDF);
         }
         $transactions = $transactions->get();
         return response()->json(['success' => true, 'data' => $transactions]);
@@ -350,7 +358,7 @@ class GeneralController extends Controller
     {
         $user = Auth::user();
         $merchant = $user->merchant;
-        $transaction = UserTransaction::query()
+        $transaction = MerchantTransaction::query()
             ->where('merchant_id', $merchant->id)
             ->where('id', $transaction)
             ->first();

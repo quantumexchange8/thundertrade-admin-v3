@@ -15,6 +15,9 @@ return new class extends Migration
     {
         Schema::create('merchant_transactions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users');
+            $table->string('merchant_transaction_no')->nullable();
+            $table->string('channel');
             $table->tinyInteger('status')->default(0);
             $table->string('transaction_type');
             $table->string('address');
@@ -31,7 +34,6 @@ return new class extends Migration
             $table->string('approval_by')->nullable();
             $table->string('remarks')->nullable();
             $table->string('receipt')->nullable();
-            $table->string('merchant_transaction_no');
             $table->timestamps();
         });
     }

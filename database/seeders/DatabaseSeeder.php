@@ -54,7 +54,7 @@ class DatabaseSeeder extends Seeder
                 'level' => 'Diamond',
                 'amount' => 100000,
                 'deposit' => 1,
-                'withdrawal' => 0.51,
+                'withdrawal' => 0.5,
             ]
         );
         Ranking::create(

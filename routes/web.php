@@ -48,8 +48,6 @@ Route::namespace("Web")->group(function () {
 
         Route::resource('users', 'UserController');
 
-        Route::resource('usertransactions', 'UserTransactionController');
-
         Route::resource('permissiongroups', 'PermissionGroupController');
 
         Route::resource('permissions', 'PermissionController');
@@ -68,8 +66,6 @@ Route::namespace("Web")->group(function () {
 
         Route::resource('merchants.transactions', 'MerchantTransactionController');
 
-        Route::resource('merchants.usertransactions', 'MerchantUserTransactionController');
-
         Route::get('merchant-roles/{merchant?}', 'GeneralController@getRolesByMerchant');
 
 
@@ -81,14 +77,12 @@ Route::namespace("Web")->group(function () {
             Route::get('roles', 'RoleTable');
             Route::get('users', 'UserTable');
             Route::get('permissiongroups', 'PermissionGroupTable');
-            Route::get('usertransactions', 'UserTransactionTable');
             Route::get('permissions', 'PermissionTable');
             Route::get('activitylogs', 'ActivityLogTable');
             Route::get('merchants/{merchant}/wallets', 'MerchantWalletTable');
             Route::get('merchants/{merchant}/users', 'MerchantUserTable');
             Route::get('merchants/{merchant}/roles', 'MerchantRoleTable');
             Route::get('merchants/{merchant}/transactions', 'MerchantTransactionTable');
-            Route::get('merchants/{merchant}/usertransactions', 'MerchantUserTransactionTable');
         });
     });
 });

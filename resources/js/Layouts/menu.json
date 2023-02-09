@@ -20,10 +20,6 @@
         "path": "users.index"
     },
     {
-        "name": "User Transaction",
-        "path": "usertransactions.index"
-    },
-    {
         "name": "Permission Group",
         "path": "permissiongroups.index"
     },
