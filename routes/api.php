@@ -55,6 +55,8 @@ Route::middleware('api')->namespace('Api')->group(function () {
 
                 Route::post('change-security-pin', 'changeSecurityPin');
 
+                Route::post('forgot-security-pin', 'forgotSecurityPin');
+
                 Route::get('users', 'userIndex');
 
                 Route::post('users', 'userStore');

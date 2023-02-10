@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Exports\MerchantTransactionExport;
 use App\Http\Controllers\Controller;
+use App\Mail\ForgotSecurityPin;
 use App\Models\Merchant;
 use App\Models\MerchantTransaction;
 use App\Models\MerchantWallet;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Activitylog\Models\Activity;
 
@@ -382,5 +384,29 @@ class GeneralController extends Controller
         $user->save();
 
         return response()->json(['success' => true, 'message' => 'Update Setting Success']);
+    }
+
+    public function forgotSecurityPin()
+    {
+        if (Gate::denies('check-permission', 'allow-change-6-digit-pin')) {
+            return response()->json(['success' => false, 'message' => 'Not enough Permission'], 403);
+        }
+        $user = Auth::user();
+        $merchant = $user->merchant;
+        $security_pin = str_pad(
+            string: strval(random_int(
+                min: 000_000,
+                max: 999_999,
+            )),
+            length: 6,
+            pad_string: '0',
+            pad_type: STR_PAD_LEFT,
+        );
+
+        Mail::to($user)->send(new ForgotSecurityPin($security_pin));
+        $merchant->security_pin = Hash::make($security_pin);
+        $merchant->save();
+
+        return response()->json(['success' => true, 'message' => 'Email Sent']);
     }
 }
