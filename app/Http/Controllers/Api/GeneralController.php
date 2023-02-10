@@ -211,7 +211,7 @@ class GeneralController extends Controller
         $user = Auth::user();
         $merchant = $user->merchant;
         $users = User::where('merchant_id', $merchant->id)->pluck('id');
-        $logs = Activity::where('causer_type', 'App\Models\User')->whereIn('causer_id', $users)->latest();
+        $logs = Activity::where('causer_type', 'App\\Models\\User')->whereIn('causer_id', $users)->latest()->get();
         return response()->json(['success' => true, 'data' => $logs]);
     }
 
