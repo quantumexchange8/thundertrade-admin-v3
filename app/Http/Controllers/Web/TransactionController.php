@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class TransactionController extends Controller
 {
@@ -79,6 +80,7 @@ class TransactionController extends Controller
         if ($rec->status == 0) {
             $wallet = MerchantWallet::find($rec->wallet_id);
             $merchant = $rec->merchant;
+            LogBatch::startBatch();
             if ($request->status == 2) {
                 if ($rec->transaction_type == "deposit") {
 
@@ -119,7 +121,8 @@ class TransactionController extends Controller
                 'approval_by' => Auth::id(),
                 'approval_date' => today(),
             ]);
-
+            activity('activity-log')->causedBy(Auth::user())->log('approve-transaction');
+            LogBatch::endBatch();
             if ($rec->channel == 'website') {
                 Http::post($merchant->notify_url, ['transaction_no' => $rec->merchant_transaction_no, 'status' => $request->status]);
             }

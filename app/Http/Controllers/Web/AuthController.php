@@ -26,7 +26,7 @@ class AuthController extends Controller
         if (!Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             return response()->json(['success' => false, 'message' => 'Invalid user or password']);
         }
-        activity()->causedBy(Auth::user())->log('Login');
+        activity('activity-log')->causedBy(Auth::user())->log('Login');
 
         return response()->json(['success' => true, "message" => 'Success']);
     }
@@ -36,6 +36,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        activity('activity-log')->causedBy(Auth::user())->log('logout');
     }
 
     public function forgotPassword(Request $request)
@@ -74,7 +75,7 @@ class AuthController extends Controller
         $user->tokens()->delete();
         Mail::to($email)->send(new ForgotPassword($password));
 
-        activity()->causedBy($user)->log('Reset Password');
+        activity('activity-log')->causedBy($user)->log('Reset Password');
         return response()->json(['success' => true, 'message' => 'New Password Has Been Sent to Your Email']);
     }
 }

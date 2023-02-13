@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Merchant;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class RoleController extends Controller
 {
@@ -46,12 +48,13 @@ class RoleController extends Controller
             'name' => ['required', 'string'],
             'merchant_id' => ['nullable', 'integer'],
         ]);
-
+        LogBatch::startBatch();
         Role::create([
             'name' => $request->name,
             'merchant_id' => $request->merchant_id,
         ]);
-
+        activity('activity-log')->causedBy(Auth::user())->log('create-role');
+        LogBatch::endBatch();
         return response()->json([
             'success' => true,
             'message' => 'Create Role Success',
@@ -108,7 +111,10 @@ class RoleController extends Controller
      */
     public function destroy($id)
     {
+        LogBatch::startBatch();
         $count = Role::destroy($id);
+        activity('activity-log')->causedBy(Auth::user())->log('delete-role');
+        LogBatch::endBatch();
         if ($count > 0) {
             return response()->json([
                 'success' => true,

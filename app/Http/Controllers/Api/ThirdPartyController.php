@@ -8,6 +8,7 @@ use App\Models\MerchantTransaction;
 use App\Models\MerchantWallet;
 use App\Services\RunningNumberService;
 use Illuminate\Http\Request;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class ThirdPartyController extends Controller
 {
@@ -54,7 +55,7 @@ class ThirdPartyController extends Controller
         /*  $receipt_name = pathinfo($receipt->getClientOriginalName(), PATHINFO_FILENAME) . time() . '.' . $receipt->getClientOriginalExtension();
         $receipt->move("uploads/transaction/" . $merchant->id, $receipt_name); */
 
-
+        LogBatch::startBatch();
         MerchantTransaction::create([
             'transaction_no' => $transaction_no,
             'merchant_transaction_no' => $result['merchantOrderNo'],
@@ -70,7 +71,8 @@ class ThirdPartyController extends Controller
             'wallet_id' => $wallet->id,
             'channel' => 'website'
         ]);
-
+        activity('activity-log')->causedBy($merchant)->log('merchant-top-up');
+        LogBatch::endBatch();
         return response()->json(['message' => 'Success']);
     }
 
@@ -108,7 +110,7 @@ class ThirdPartyController extends Controller
 
         $transaction_no = RunningNumberService::getID('transaction_number');
 
-
+        LogBatch::startBatch();
         MerchantTransaction::create([
             'transaction_no' => $transaction_no,
             'merchant_transaction_no' => $result['merchantOrderNo'],
@@ -122,7 +124,8 @@ class ThirdPartyController extends Controller
             'wallet_id' => $wallet->id,
             'channel' => 'website'
         ]);
-
+        activity('activity-log')->causedBy($merchant)->log('merchant-withdrawal');
+        LogBatch::endBatch();
         return response()->json(['message' => 'Success']);
     }
 

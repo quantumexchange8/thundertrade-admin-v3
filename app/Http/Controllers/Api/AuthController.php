@@ -40,7 +40,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
         $authToken = $user->createToken('auth-token')->plainTextToken;
 
-        activity()->causedBy(Auth::user())->log('Login');
+        activity('activity-log')->causedBy(Auth::user())->log('login');
         return response()->json([
             'success' => true,
             'message' => 'Logged In',
@@ -51,6 +51,7 @@ class AuthController extends Controller
     public function logout()
     {
         auth()->user()->tokens()->delete();
+        activity('activity-log')->causedBy(Auth::user())->log('logout');
         return response()->json([
             'success' => true,
             'message' => 'Logged Out'
@@ -95,7 +96,7 @@ class AuthController extends Controller
         $user->tokens()->delete();
         Mail::to($email)->send(new ForgotPassword($password));
 
-        activity()->causedBy($user)->log('Reset Password');
+        activity('activity-log')->causedBy($user)->log('Reset Password');
         return response()->json(['success' => true, 'message' => 'New Password Has Been Sent to Your Email']);
     }
 }

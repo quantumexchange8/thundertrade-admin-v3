@@ -45,6 +45,7 @@ Route::middleware('api')->namespace('Api')->group(function () {
 
                 Route::get('rankings', 'rankingIndex');
 
+                //unused
                 Route::get('roles', 'roleIndex');
 
                 Route::get('wallets', 'walletIndex');
@@ -78,6 +79,9 @@ Route::middleware('api')->namespace('Api')->group(function () {
                 Route::post('settings', 'userSettingStore');
 
                 Route::get('logs', 'activityLogIndex');
+                Route::get('logs/{id}', 'activityLogShow');
+
+                Route::post('logs', 'activityLogStore');
             });
         });
     });

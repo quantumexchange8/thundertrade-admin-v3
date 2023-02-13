@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\PermissionGroup;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class PermissionGroupController extends Controller
 {
@@ -41,12 +43,13 @@ class PermissionGroupController extends Controller
         $request->validate([
             'name' => ['required', 'string']
         ]);
-
+        LogBatch::startBatch();
         PermissionGroup::create([
             'name' => $request->name,
             'code' => Str::slug($request->name),
         ]);
-
+        activity('activity-log')->causedBy(Auth::user())->log('create-permission-group');
+        LogBatch::endBatch();
 
         return response()->json([
             'success' => true,
@@ -89,12 +92,13 @@ class PermissionGroupController extends Controller
         $request->validate([
             'name' => ['required', 'string']
         ]);
-
+        LogBatch::startBatch();
         $rec = PermissionGroup::find($id);
         $rec->update([
             'name' => $request->name,
         ]);
-
+        activity('activity-log')->causedBy(Auth::user())->log('edit-permission-group');
+        LogBatch::endBatch();
 
         return response()->json([
             'success' => true,
@@ -110,7 +114,10 @@ class PermissionGroupController extends Controller
      */
     public function destroy($id)
     {
+        LogBatch::startBatch();
         $count = PermissionGroup::destroy($id);
+        activity('activity-log')->causedBy(Auth::user())->log('delete-permission-group');
+        LogBatch::endBatch();
         if ($count > 0) {
             return response()->json([
                 'success' => true,

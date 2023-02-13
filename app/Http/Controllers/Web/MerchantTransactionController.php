@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class MerchantTransactionController extends Controller
 {
@@ -79,6 +80,7 @@ class MerchantTransactionController extends Controller
         if ($rec->status == 0) {
             $wallet = MerchantWallet::find($rec->wallet_id);
             $merchant = $rec->merchant;
+            LogBatch::startBatch();
             if ($request->status == 2) {
                 if ($rec->transaction_type == "deposit") {
 
@@ -91,6 +93,7 @@ class MerchantTransactionController extends Controller
                     $total_deposit = MerchantWallet::where('merchant_id', $merchant->id)->sum('gross_deposit');
                     $ranking = Ranking::where('amount', '<=', $total_deposit)->orderBy('amount', 'desc')->first();
                     if ($ranking) {
+
                         if ($ranking->id != $merchant->ranking_id) {
                             $merchant->update(['ranking_id' => $ranking->id]);
                         }
@@ -118,7 +121,8 @@ class MerchantTransactionController extends Controller
                 'approval_by' => Auth::id(),
                 'approval_date' => today(),
             ]);
-
+            activity('activity-log')->causedBy(Auth::user())->log('approve-transaction');
+            LogBatch::endBatch();
             if ($rec->channel == 'website') {
                 Http::post($merchant->notify_url, ['transaction_no' => $rec->merchant_transaction_no, 'status' => $request->status]);
             }

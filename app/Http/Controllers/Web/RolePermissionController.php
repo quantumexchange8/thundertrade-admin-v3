@@ -8,7 +8,9 @@ use App\Models\PermissionGroup;
 use App\Models\Role;
 use App\Models\RolePermission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class RolePermissionController extends Controller
 {
@@ -43,6 +45,7 @@ class RolePermissionController extends Controller
     public function store(Request $request, $role)
     {
         $perm =  $request->permissions;
+        LogBatch::startBatch();
         $permissions = Permission::whereIn('code', $perm)->pluck('id');
         foreach ($permissions as $row) {
             RolePermission::firstOrCreate([
@@ -53,6 +56,8 @@ class RolePermissionController extends Controller
         RolePermission::where('role_id', $role)->whereRelation('permission', function ($q) use ($permissions) {
             $q->whereNotIn('id', $permissions);
         })->delete();
+        activity('activity-log')->causedBy(Auth::user())->log('edit-role-permission');
+        LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Update Success']);
     }
 

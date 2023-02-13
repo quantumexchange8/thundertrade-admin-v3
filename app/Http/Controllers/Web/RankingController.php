@@ -9,7 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\ExportableTrait;
 use App\Traits\SearchableTrait;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class RankingController extends Controller
 {
@@ -50,7 +52,7 @@ class RankingController extends Controller
         ]);
 
 
-
+        LogBatch::startBatch();
         Ranking::create([
             'level' => $request->level,
             'amount' => $request->amount,
@@ -58,7 +60,8 @@ class RankingController extends Controller
             'withdrawal' => $request->withdrawal,
         ]);
 
-
+        activity('activity-log')->causedBy(Auth::user())->log('create-ranking');
+        LogBatch::endBatch();
         return response()->json([
             'success' => true,
             'message' => 'Create Ranking Success',
@@ -105,7 +108,7 @@ class RankingController extends Controller
         ]);
 
 
-
+        LogBatch::startBatch();
         $rec = Ranking::find($id);
         $rec->update([
             'level' => $request->level,
@@ -114,7 +117,8 @@ class RankingController extends Controller
             'withdrawal' => $request->withdrawal,
         ]);
 
-
+        activity('activity-log')->causedBy(Auth::user())->log('edit-ranking');
+        LogBatch::endBatch();
         return response()->json([
             'success' => true,
             'message' => 'Update Ranking Success',
@@ -129,7 +133,10 @@ class RankingController extends Controller
      */
     public function destroy($id)
     {
+        LogBatch::startBatch();
         $count = Ranking::destroy($id);
+        activity('activity-log')->causedBy(Auth::user())->log('delete-ranking');
+        LogBatch::endBatch();
         if ($count > 0) {
             return response()->json([
                 'success' => true,

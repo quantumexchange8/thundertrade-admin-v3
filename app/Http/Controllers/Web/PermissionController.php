@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\PermissionGroup;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class PermissionController extends Controller
 {
@@ -45,13 +47,14 @@ class PermissionController extends Controller
             'group_id' => ['required', 'numeric'],
         ]);
 
-
+        LogBatch::startBatch();
         Permission::create([
             'name' => $request->name,
             'group_id' => $request->group_id,
             'code' => Str::slug($request->name),
         ]);
-
+        activity('activity-log')->causedBy(Auth::user())->log('create-permission');
+        LogBatch::endBatch();
         return response()->json([
             'success' => true,
             'message' => 'Create Permission Success',
@@ -101,14 +104,15 @@ class PermissionController extends Controller
             'group_id' => ['required', 'numeric'],
         ]);
 
-
+        LogBatch::startBatch();
         $rec = Permission::find($id);
         $rec->update([
             'name' => $request->name,
             'group_id' => $request->group_id,
             'code' => Str::slug($request->name),
         ]);
-
+        activity('activity-log')->causedBy(Auth::user())->log('edit-permission');
+        LogBatch::endBatch();
         return response()->json([
             'success' => true,
             'message' => 'Update Permission Success',
@@ -123,7 +127,10 @@ class PermissionController extends Controller
      */
     public function destroy($id)
     {
+        LogBatch::startBatch();
         $count = Permission::destroy($id);
+        activity('activity-log')->causedBy(Auth::user())->log('delete-permission');
+        LogBatch::endBatch();
         if ($count > 0) {
             return response()->json([
                 'success' => true,

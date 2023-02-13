@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
+use Spatie\Activitylog\Facades\LogBatch;
 use Spatie\Activitylog\Models\Activity;
 
 class GeneralController extends Controller
@@ -39,6 +41,7 @@ class GeneralController extends Controller
         if (Gate::denies('check-permission', 'allow-edit-profile')) {
             return response()->json(['success' => false, 'message' => 'Not enough Permission'], 403);
         }
+        LogBatch::startBatch();
         $user = Auth::user();
         $merchant = $user->merchant;
         $request->validate([
@@ -51,6 +54,9 @@ class GeneralController extends Controller
         $user->save();
         $merchant->name = $request->merchant_name;
         $merchant->save();
+
+        activity('activity-log')->causedBy(Auth::user())->log('edit-profile');
+        LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Update Profile Success']);
     }
 
@@ -64,6 +70,8 @@ class GeneralController extends Controller
         $profile_picture = $request->file('profile_picture')->store('uploads/profiles');
         $user->profile_picture = $profile_picture;
         $user->save();
+
+
         return response()->json(['success' => true, 'message' => 'Update Profile Picture Success']);
     }
 
@@ -90,6 +98,7 @@ class GeneralController extends Controller
             'trc20_address' => ['required'],
             'btc_address' => ['required']
         ]);
+        LogBatch::startBatch();
         $merchant = Auth::user()->merchant;
         $ERC20Wallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', 'ERC20')->first();
         $ERC20Wallet->wallet_address = $request->erc20_address;
@@ -100,6 +109,9 @@ class GeneralController extends Controller
         $BTCWallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', 'BTC')->first();
         $BTCWallet->wallet_address = $request->btc_address;
         $BTCWallet->save();
+
+        activity('activity-log')->causedBy(Auth::user())->log('change-protocol');
+        LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Update Wallet Address Success']);
     }
 
@@ -119,9 +131,11 @@ class GeneralController extends Controller
             'new_security_pin' => ['required', 'numeric', 'digits:6', 'different:current_security_pin'],
             'tac' => ['required', new OtpVerify($user->email, 'change_security_pin')]
         ]);
-
+        LogBatch::startBatch();
         $merchant->security_pin = Hash::make($request->new_security_pin);
         $merchant->save();
+        activity('activity-log')->causedBy(Auth::user())->log('change-6-digit-pin');
+        LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Change Security pin Success']);
     }
 
@@ -137,9 +151,11 @@ class GeneralController extends Controller
             'security_pin' => ['required', 'numeric', 'digits:6'],
             'tac' => ['required', new OtpVerify($user->email, 'set_security_pin')]
         ]);
-
+        LogBatch::startBatch();
         $merchant->security_pin = Hash::make($request->security_pin);
         $merchant->save();
+        activity('activity-log')->causedBy(Auth::user())->log('set-6-digit-pin');
+        LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Set Security Pin Success']);
     }
 
@@ -169,20 +185,29 @@ class GeneralController extends Controller
             'email' => ['required', 'email', 'unique:users,email'],
             'name' => ['required', 'string'],
             'phone' => ['required', 'string', 'unique:users,phone'],
-            'role' => ['required', 'numeric'],
+            'role' => ['required', 'string'],
             'password' => ['required', Password::min(8)->mixedCase()]
         ]);
 
+        if (Role::where('name', $data['role'])->exists()) {
+            throw ValidationException::withMessages(['role' => 'Role existed']);
+        }
+        $roleId = Role::create(['name' => $data['role']]);
+
         $user = Auth::user();
         $merchant = $user->merchant;
+        LogBatch::startBatch();
         User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
             'password' => Hash::make($data['password']),
-            'role_id' => $data['role'],
+            'role_id' => $roleId,
             'merchant_id' => $merchant->id,
         ]);
+
+        activity('activity-log')->causedBy(Auth::user())->log('create-sub-admin');
+        LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Create Sub Admin Success']);
     }
 
@@ -200,11 +225,12 @@ class GeneralController extends Controller
         if (!Hash::check($request->security_pin, $merchant->security_pin)) {
             return response()->json(['message' => 'Security pin does not match']);
         }
-
+        LogBatch::startBatch();
         $rec = User::where('merchant_id', $merchant->id)->where('id', $id)->first();
 
         $rec->delete();
-
+        activity('activity-log')->causedBy(Auth::user())->log('delete-sub-admin');
+        LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Delete Sub Admin Success']);
     }
 
@@ -213,8 +239,13 @@ class GeneralController extends Controller
         $user = Auth::user();
         $merchant = $user->merchant;
         $users = User::where('merchant_id', $merchant->id)->pluck('id');
-        $logs = Activity::where('causer_type', 'App\\Models\\User')->whereIn('causer_id', $users)->latest()->get();
+        $logs = Activity::inLog(['activity-log'])->where('causer_type', 'App\\Models\\User')->whereIn('causer_id', $users)->latest()->with(['causer', 'subject'])->get();
         return response()->json(['success' => true, 'data' => $logs]);
+    }
+    public function activityLogShow(Request $request, $id)
+    {
+        $data = Activity::forBatch($id)->inLog(['default'])->with(['causer', 'subject'])->get();
+        return response()->json(['success' => true, 'data' => $data]);
     }
 
     public function rolePermissionIndex(Request $request, $role)
@@ -230,7 +261,7 @@ class GeneralController extends Controller
             return response()->json(['success' => false, 'message' => 'Not enough Permission'], 403);
         }
         $request->validate(['permissions' => ['required', 'array']]);
-
+        LogBatch::startBatch();
         $perm =  $request->permissions;
         $permissions = Permission::whereIn('code', $perm)->pluck('id');
         foreach ($permissions as $row) {
@@ -242,6 +273,8 @@ class GeneralController extends Controller
         RolePermission::where('role_id', $role)->whereRelation('permission', function ($q) use ($permissions) {
             $q->whereNotIn('id', $permissions);
         })->delete();
+        activity('activity-log')->causedBy(Auth::user())->log('edit-user-roles');
+        LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Update Success']);
     }
 
@@ -266,7 +299,7 @@ class GeneralController extends Controller
         $transaction_no = RunningNumberService::getID('transaction_number');
 
         $path = $request->file('receipt')->store('uploads/transactions');
-
+        LogBatch::startBatch();
         MerchantTransaction::create([
             'transaction_no' => $transaction_no,
             'user_id' => $user->id,
@@ -282,7 +315,8 @@ class GeneralController extends Controller
             'wallet_id' => $wallet->id,
             'channel' => 'merchant'
         ]);
-
+        activity('activity-log')->causedBy(Auth::user())->log('top-up');
+        LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Deposit Success']);
     }
 
@@ -295,36 +329,41 @@ class GeneralController extends Controller
         $merchant = $user->merchant;
 
         $data = $request->validate([
-            'address' => ['required'],
+            'address.*' => ['required'],
+            'amount.*' => ['required', 'numeric'],
             'currency' => ['required', 'in:TRC20,ERC20,BTC'],
-            'amount' => ['required', 'numeric'],
-            'security_pin' => ['required'],
-            'tac' => ['required', new OtpVerify($user->email, 'withdrawal')],
+            // 'security_pin' => ['required'],
+            //  'tac' => ['required', new OtpVerify($user->email, 'withdrawal')],
         ]);
-        if (!Hash::check($request->security_pin, $merchant->security_pin)) {
+        /*  if (!Hash::check($request->security_pin, $merchant->security_pin)) {
             return response()->json(['success' => false, 'message' => 'Security pin does not match']);
-        }
+        } */
 
         $wallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', $data['currency'])->first();
-        $charges = $data['amount'] * ($merchant->ranking->withdrawal / 100);
-        $total = $data['amount'] - $charges;
+
         $transaction_no = RunningNumberService::getID('transaction_number');
-
-
-        MerchantTransaction::create([
-            'transaction_no' => $transaction_no,
-            'user_id' => $user->id,
-            'merchant_id' => $merchant->id,
-            'address' => $data['address'],
-            'currency' => $data['currency'],
-            'amount' => $data['amount'],
-            'charges' => $charges,
-            'total' => $total,
-            'transaction_type' => 'withdrawal',
-            'wallet_id' => $wallet->id,
-            'channel' => 'merchant'
-        ]);
-
+        LogBatch::startBatch();
+        $totalAmount = 0;
+        for ($i = 0; $i < count($data['address']); $i++) {
+            $totalAmount += $data['amount'][$i];
+            $charges = $data['amount'][$i] * ($merchant->ranking->withdrawal / 100);
+            $total = $data['amount'][$i] - $charges;
+            MerchantTransaction::create([
+                'transaction_no' => $transaction_no,
+                'user_id' => $user->id,
+                'merchant_id' => $merchant->id,
+                'address' => $data['address'][$i],
+                'currency' => $data['currency'],
+                'amount' => $data['amount'][$i],
+                'charges' => $charges,
+                'total' => $total,
+                'transaction_type' => 'withdrawal',
+                'wallet_id' => $wallet->id,
+                'channel' => 'merchant'
+            ]);
+        }
+        activity('activity-log')->causedBy(Auth::user())->withProperties(['total_amount' => $totalAmount])->log('withdrawal');
+        LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Withdrawal Success']);
     }
 
@@ -404,9 +443,18 @@ class GeneralController extends Controller
         );
 
         Mail::to($user)->send(new ForgotSecurityPin($security_pin));
+        LogBatch::startBatch();
         $merchant->security_pin = Hash::make($security_pin);
         $merchant->save();
-
+        activity('activity-log')->causedBy(Auth::user())->log('reset-security-pin');
+        LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Email Sent']);
+    }
+
+    public function activityLogStore(Request $request)
+    {
+        $request->validate(['action' => 'required']);
+        activity('activity-log')->causedBy(Auth::user())->log($request->action);
+        return response()->json(['success' => true, 'message' => 'Log Success']);
     }
 }

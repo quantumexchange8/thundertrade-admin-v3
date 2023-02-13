@@ -7,10 +7,12 @@ use App\Models\Merchant;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class MerchantUserController extends Controller
 {
@@ -62,6 +64,7 @@ class MerchantUserController extends Controller
         if ($profile_picture) {
             $profile_picture = $profile_picture->store('uploads/profiles');
         }
+        LogBatch::startBatch();
 
         User::create([
             'email' => $request->email,
@@ -73,7 +76,8 @@ class MerchantUserController extends Controller
             'password' => Hash::make($request->password)
         ]);
 
-
+        activity('activity-log')->causedBy(Auth::user())->log('create-user');
+        LogBatch::endBatch();
         return response()->json([
             'success' => true,
             'message' => 'Create User Success',
@@ -100,7 +104,10 @@ class MerchantUserController extends Controller
     public function edit($merchant, $id)
     {
         $user = User::find($id);
+        LogBatch::startBatch();
         $roles = Role::where("merchant_id", $merchant)->get();
+        activity('activity-log')->causedBy(Auth::user())->log('create-user');
+        LogBatch::endBatch();
         return response()->json([
             'success' => true,
             'data' => [
@@ -165,7 +172,10 @@ class MerchantUserController extends Controller
      */
     public function destroy($merchant, $id)
     {
+        LogBatch::startBatch();
         $count = User::destroy($id);
+        activity('activity-log')->causedBy(Auth::user())->log('delete-user');
+        LogBatch::endBatch();
         if ($count > 0) {
             return response()->json([
                 'success' => true,

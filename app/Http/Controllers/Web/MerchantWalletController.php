@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\MerchantWallet;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class MerchantWalletController extends Controller
 {
@@ -79,10 +81,12 @@ class MerchantWalletController extends Controller
             'wallet_address' => 'required|string',
         ]);
         $rec = MerchantWallet::where('merchant_id', $merchant)->find($id);
+        LogBatch::startBatch();
         $rec->update([
             'wallet_address' => $request->wallet_address,
         ]);
-
+        activity('activity-log')->causedBy(Auth::user())->log('edit-merchant-wallet');
+        LogBatch::endBatch();
         return response()->json([
             'success' => true,
             'message' => 'Update Wallet Success',

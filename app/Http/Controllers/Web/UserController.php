@@ -7,10 +7,12 @@ use App\Models\Merchant;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class UserController extends Controller
 {
@@ -63,6 +65,8 @@ class UserController extends Controller
         if ($profile_picture) {
             $profile_picture = $profile_picture->store('uploads/profiles');
         }
+
+        LogBatch::startBatch();
         User::create([
             'email' => $request->email,
             'name' => $request->name,
@@ -73,7 +77,8 @@ class UserController extends Controller
             'password' => Hash::make($request->password)
         ]);
 
-
+        activity('activity-log')->causedBy(Auth::user())->log('create-user');
+        LogBatch::endBatch();
         return response()->json([
             'success' => true,
             'message' => 'Create User Success',
@@ -132,7 +137,7 @@ class UserController extends Controller
         ]);
 
         $rec = User::find($id);
-
+        LogBatch::startBatch();
         $rec->email = $request->email;
         $rec->name = $request->name;
         $rec->phone = $request->phone;
@@ -153,7 +158,8 @@ class UserController extends Controller
 
         $rec->save();
 
-
+        activity('activity-log')->causedBy(Auth::user())->log('edit-user');
+        LogBatch::endBatch();
         return response()->json([
             'success' => true,
             'message' => 'Update User Success',
@@ -168,7 +174,10 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
+        LogBatch::startBatch();
         $count = User::destroy($id);
+        activity('activity-log')->causedBy(Auth::user())->log('');
+        LogBatch::endBatch();
         if ($count > 0) {
             return response()->json([
                 'success' => true,

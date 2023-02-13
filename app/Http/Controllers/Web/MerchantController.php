@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class MerchantController extends Controller
 {
@@ -54,7 +55,7 @@ class MerchantController extends Controller
             'name' => ['required'],
             'notify_url' => ['required', 'url'],
         ]);
-
+        LogBatch::startBatch();
         $merchant = Merchant::create([
             'name' => $request->name,
             'notify_url' => $request->notify_url,
@@ -79,7 +80,8 @@ class MerchantController extends Controller
         foreach ($permissions as $permission) {
             RolePermission::create(['role_id' => $role->id, 'permission_id' => $permission]);
         }
-
+        activity('activity-log')->causedBy(Auth::user())->log('create-merchant');
+        LogBatch::endBatch();
 
         return response()->json([
             'success' => true,
@@ -124,13 +126,14 @@ class MerchantController extends Controller
             'notify_url' => ['required', 'url'],
         ]);
 
-
+        LogBatch::startBatch();
         $merchant = Merchant::find($id);
         $merchant->update([
             'name' => $request->name,
             'notify_url' => $request->notify_url,
         ]);
-
+        activity('activity-log')->causedBy(Auth::user())->log('edit-merchant');
+        LogBatch::endBatch();
         return response()->json([
             'success' => true,
             'message' => 'Update Merchant Success',
@@ -153,7 +156,7 @@ class MerchantController extends Controller
         //            },ARRAY_FILTER_USE_KEY);
         //
         //
-        //            activity()->causedBy(Auth::user())->performedOn($merchant)->withProperties(['old'=>$old,'new'=>$new])->log('updated');
+        //            activity('activity-log')->causedBy(Auth::user())->performedOn($merchant)->withProperties(['old'=>$old,'new'=>$new])->log('updated');
         //        }catch(\Exception $exception){
         //            return response()->json([
         //                'error'=>$exception->errorInfo,
@@ -172,7 +175,7 @@ class MerchantController extends Controller
         //                return in_array($key,$keys);
         //            },ARRAY_FILTER_USE_KEY);
         //
-        //            activity()->causedBy(Auth::user())->performedOn($merchant)->withProperties(['old'=>$old,'new'=>$new])->log('updated');
+        //            activity('activity-log')->causedBy(Auth::user())->performedOn($merchant)->withProperties(['old'=>$old,'new'=>$new])->log('updated');
         //
         //        }
 
@@ -189,7 +192,10 @@ class MerchantController extends Controller
      */
     public function destroy($id)
     {
+        LogBatch::startBatch();
         $count = Merchant::destroy($id);
+        activity('activity-log')->causedBy(Auth::user())->log('delete-merchant');
+        LogBatch::endBatch();
         if ($count > 0) {
             return response()->json([
                 'success' => true,
