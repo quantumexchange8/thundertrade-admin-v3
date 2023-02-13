@@ -332,12 +332,12 @@ class GeneralController extends Controller
             'address.*' => ['required'],
             'amount.*' => ['required', 'numeric'],
             'currency' => ['required', 'in:TRC20,ERC20,BTC'],
-            // 'security_pin' => ['required'],
-            //  'tac' => ['required', new OtpVerify($user->email, 'withdrawal')],
+            'security_pin' => ['required'],
+            'tac' => ['required', new OtpVerify($user->email, 'withdrawal')],
         ]);
-        /*  if (!Hash::check($request->security_pin, $merchant->security_pin)) {
+        if (!Hash::check($request->security_pin, $merchant->security_pin)) {
             return response()->json(['success' => false, 'message' => 'Security pin does not match']);
-        } */
+        }
 
         $wallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', $data['currency'])->first();
 
