@@ -31,7 +31,6 @@
 
 <script setup>
 import { ref } from 'vue'
-import Sidebar from '@/Layouts/Sidebar.vue';
 import { Inertia } from "@inertiajs/inertia";
 import Menu from "./menu.json";
 import AppMenu from "./AppMenu"
