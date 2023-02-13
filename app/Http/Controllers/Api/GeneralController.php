@@ -192,7 +192,7 @@ class GeneralController extends Controller
         if (Role::where('name', $data['role'])->exists()) {
             throw ValidationException::withMessages(['role' => 'Role existed']);
         }
-        $roleId = Role::create(['name' => $data['role']]);
+        $role = Role::create(['name' => $data['role']]);
 
         $user = Auth::user();
         $merchant = $user->merchant;
@@ -202,7 +202,7 @@ class GeneralController extends Controller
             'email' => $data['email'],
             'phone' => $data['phone'],
             'password' => Hash::make($data['password']),
-            'role_id' => $roleId,
+            'role_id' => $role->id,
             'merchant_id' => $merchant->id,
         ]);
 
