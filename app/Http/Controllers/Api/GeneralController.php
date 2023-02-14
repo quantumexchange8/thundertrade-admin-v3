@@ -362,7 +362,7 @@ class GeneralController extends Controller
                 'channel' => 'merchant'
             ]);
         }
-        activity('activity-log')->causedBy(Auth::user())->withProperties(['total_amount' => $totalAmount])->log('withdrawal');
+        activity('activity-log')->causedBy(Auth::user())->withProperties(['total_amount' => $totalAmount . " " . $data['currency']])->log('withdrawal');
         LogBatch::endBatch();
         return response()->json(['success' => true, 'message' => 'Withdrawal Success']);
     }

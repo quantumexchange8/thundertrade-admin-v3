@@ -96,7 +96,7 @@ class AuthController extends Controller
         $user->tokens()->delete();
         Mail::to($email)->send(new ForgotPassword($password));
 
-        activity('activity-log')->causedBy($user)->log('Reset Password');
+        activity('activity-log')->causedBy($user)->log('reset-password');
         return response()->json(['success' => true, 'message' => 'New Password Has Been Sent to Your Email']);
     }
 }
