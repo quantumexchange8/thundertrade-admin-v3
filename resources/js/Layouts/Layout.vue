@@ -16,7 +16,7 @@
         </q-header>
 
         <q-drawer show-if-above v-model="leftDrawerOpen" class="bg-dark" side="left" bordered>
-            <AppMenu :menu="Menu" />
+            <!--     <AppMenu :menu="Menu" /> -->
         </q-drawer>
 
         <q-page-container class="tw-h-screen">
