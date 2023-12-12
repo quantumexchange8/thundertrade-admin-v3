@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\EmailOtpController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -30,6 +31,8 @@ Route::namespace("Web")->group(function () {
         Route::post('forgot-password', 'AuthController@forgotPassword');
 
         Route::post('otp-create', [EmailOtpController::class, 'create']);
+
+        Route::post('receiveDeposit', [PaymentController::class, 'deposit']);
     });
 
     Route::middleware('auth')->group(function () {
