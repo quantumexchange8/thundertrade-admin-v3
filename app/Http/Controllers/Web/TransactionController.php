@@ -135,6 +135,7 @@ class TransactionController extends Controller
 
             $url = 'https://metafinx-member.currenttech.pro/updateDeposit';
             $response = Http::post($url, $params);
+            Log::debug($response);
 
             activity('activity-log')->causedBy(Auth::user())->log('approve-transaction');
             LogBatch::endBatch();
