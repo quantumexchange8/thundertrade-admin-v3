@@ -9,6 +9,7 @@ use App\Models\Ranking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Spatie\Activitylog\Facades\LogBatch;
 
@@ -72,7 +73,7 @@ class TransactionController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, $id)
     {
@@ -121,6 +122,20 @@ class TransactionController extends Controller
                 'approval_by' => Auth::id(),
                 'approval_date' => today(),
             ]);
+
+            $hashedToken = md5($rec->transaction_no . $rec->address);
+            $params = [
+                "token" => $hashedToken,
+                "transactionID" => $rec->transaction_no,
+                "address" => $rec->address,
+                "amount" => $rec->amount,
+                "status" => $rec->status == 2 ? 'Success' : 'Rejected',
+                "remarks" => $rec->approval_reason
+            ];
+
+            $url = 'https://metafinx-member.currenttech.pro/updateDeposit';
+            $response = Http::post($url, $params);
+
             activity('activity-log')->causedBy(Auth::user())->log('approve-transaction');
             LogBatch::endBatch();
             if ($rec->channel == 'website') {
