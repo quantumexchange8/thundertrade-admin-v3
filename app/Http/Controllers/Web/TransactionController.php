@@ -132,6 +132,7 @@ class TransactionController extends Controller
                 "status" => $rec->status == 2 ? 'Success' : 'Rejected',
                 "remarks" => $rec->approval_reason
             ];
+            Log::debug($params);
 
             $url = 'https://metafinx-member.currenttech.pro/updateDeposit';
             $response = Http::post($url, $params);
