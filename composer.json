@@ -27,10 +27,11 @@
         "laravel/jetstream": "^2.14",
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
-        "spatie/laravel-activitylog": "^4.7",
-        "tightenco/ziggy": "^1.0",
         "maatwebsite/excel": "dev-main",
-        "phpoffice/phpspreadsheet": "dev-main"
+        "opcodesio/log-viewer": "^3.1",
+        "phpoffice/phpspreadsheet": "dev-main",
+        "spatie/laravel-activitylog": "^4.7",
+        "tightenco/ziggy": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
