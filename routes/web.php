@@ -33,6 +33,7 @@ Route::namespace("Web")->group(function () {
         Route::post('otp-create', [EmailOtpController::class, 'create']);
 
         Route::post('receiveDeposit', [PaymentController::class, 'deposit']);
+        Route::post('receiveWithdrawal', [PaymentController::class, 'withdrawal']);
     });
 
     Route::middleware('auth')->group(function () {
