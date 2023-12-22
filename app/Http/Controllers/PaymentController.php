@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Services\RunningNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\Facades\LogBatch;
 
 class PaymentController extends Controller
@@ -26,13 +25,12 @@ class PaymentController extends Controller
             "TxID" => $data['TxID'],
         ];
 
-        $users = User::all(); // Retrieve all users
+        $users = User::with('merchant')->get(); // Retrieve all users
 
         foreach ($users as $user) {
             $merchant = $user->merchant;
-            $dataToHash = md5($user->email . $merchant->api_key);
 
-            if ($result['token'] === $dataToHash) {
+            if ($merchant && $result['token'] === md5($user->email . $merchant->api_key)) {
                 //proceed deposit
                 $wallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', $result['currency'])->first();
                 $charges = $result['amount'] * ($merchant->ranking->deposit / 100);
@@ -73,14 +71,12 @@ class PaymentController extends Controller
             "payment_charges" => $data["payment_charges"],
         ];
 
-        $users = User::all(); // Retrieve all users
+        $users = User::with('merchant')->get(); // Retrieve all users
 
         foreach ($users as $user) {
             $merchant = $user->merchant;
-            Log::debug($merchant);
-            $dataToHash = md5($user->email . $merchant->api_key);
 
-            if ($result['token'] === $dataToHash) {
+            if ($merchant && $result['token'] === md5($user->email . $merchant->api_key)) {
                 //proceed withdrawal
                 $wallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', $result['currency'])->first();
 
