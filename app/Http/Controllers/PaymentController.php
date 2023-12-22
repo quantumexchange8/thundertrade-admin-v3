@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\RunningNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\Facades\LogBatch;
 
 class PaymentController extends Controller
@@ -76,6 +77,7 @@ class PaymentController extends Controller
 
         foreach ($users as $user) {
             $merchant = $user->merchant;
+            Log::debug($merchant);
             $dataToHash = md5($user->email . $merchant->api_key);
 
             if ($result['token'] === $dataToHash) {
