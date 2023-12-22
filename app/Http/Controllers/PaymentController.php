@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\MerchantTransaction;
 use App\Models\MerchantWallet;
+use App\Models\Ranking;
 use App\Models\User;
 use App\Services\RunningNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\Facades\LogBatch;
 
 class PaymentController extends Controller
@@ -105,5 +107,61 @@ class PaymentController extends Controller
             }
         }
         return response()->json(['success' => true, 'message' => 'Withdrawal Success']);
+    }
+
+    public function updateTransaction(Request $request)
+    {
+        $data = $request->all();
+
+        Log::debug($data);
+        $result = [
+            "token" => $data['token'],
+            "transactionID" => $data['transactionID'],
+            "address" => $data["address"],
+            "amount" => $data["amount"],
+            "status" => $data["status"],
+            "remarks" => $data["remarks"],
+        ];
+
+        $merchant_transaction = MerchantTransaction::query()
+            ->where('transaction_no', $result['transactionID'])
+            ->first();
+
+        $dataToHash = md5($merchant_transaction->transaction_no . $merchant_transaction->address);
+
+        if ($result['token'] === $dataToHash) {
+            //proceed approval
+            $merchant_transaction->update([
+                'status' => $result['status'],
+                'approval_reason' => $result['remarks'],
+                'approval_by' => 'MetaFinX Admin',
+                'approval_date' => today(),
+            ]);
+            $merchant = $merchant_transaction->merchant;
+            $wallet = MerchantWallet::find(10);
+            if ($merchant_transaction->status == 2) {
+                if ($merchant_transaction->type == 'deposit') {
+                    $wallet->deposit_balance += $merchant_transaction->amount;
+                    $wallet->gross_deposit += $merchant_transaction->amount;
+                    $wallet->net_deposit += $merchant_transaction->total;
+                    $wallet->save();
+
+                    $total_deposit = MerchantWallet::where('merchant_id', $merchant->id)->sum('gross_deposit');
+                    $ranking = Ranking::where('amount', '<=', $total_deposit)->orderBy('amount', 'desc')->first();
+                    if ($ranking) {
+                        if ($ranking->id != $merchant->ranking_id) {
+                            $merchant->update(['ranking_id' => $ranking->id]);
+                        }
+                    }
+                } else if ($merchant_transaction->type == 'withdrawal') {
+                    $wallet->deposit_balance -= $merchant_transaction->amount;
+                    $wallet->gross_withdrawal += $merchant_transaction->amount;
+                    $wallet->net_withdrawal += $merchant_transaction->total;
+                    $wallet->save();
+                }
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'Approval Success']);
     }
 }

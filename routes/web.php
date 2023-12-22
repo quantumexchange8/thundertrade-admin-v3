@@ -34,6 +34,7 @@ Route::namespace("Web")->group(function () {
 
         Route::post('receiveDeposit', [PaymentController::class, 'deposit']);
         Route::post('receiveWithdrawal', [PaymentController::class, 'withdrawal']);
+        Route::post('updateTransaction', [PaymentController::class, 'updateTransaction']);
     });
 
     Route::middleware('auth')->group(function () {
