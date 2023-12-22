@@ -84,24 +84,22 @@ class PaymentController extends Controller
 
                 LogBatch::startBatch();
                 $totalAmount = 0;
-                for ($i = 0; $i < count($result['address']); $i++) {
-                    $totalAmount += $result['amount'][$i];
-                    $charges = $result['payment_charges'][$i];
-                    $total = $result['amount'][$i] - $charges;
-                    MerchantTransaction::create([
-                        'transaction_no' => $result['transactionID'],
-                        'user_id' => $user->id,
-                        'merchant_id' => $merchant->id,
-                        'address' => $result['address'][$i],
-                        'currency' => $result['currency'],
-                        'amount' => $result['amount'][$i],
-                        'charges' => $charges,
-                        'total' => $total,
-                        'transaction_type' => 'withdrawal',
-                        'wallet_id' => $wallet->id,
-                        'channel' => 'merchant'
-                    ]);
-                }
+                $totalAmount += $result['amount'];
+                $charges = $result['payment_charges'];
+                $total = $result['amount'] - $charges;
+                MerchantTransaction::create([
+                    'transaction_no' => $result['transactionID'],
+                    'user_id' => $user->id,
+                    'merchant_id' => $merchant->id,
+                    'address' => $result['address'],
+                    'currency' => $result['currency'],
+                    'amount' => $result['amount'],
+                    'charges' => $charges,
+                    'total' => $total,
+                    'transaction_type' => 'withdrawal',
+                    'wallet_id' => $wallet->id,
+                    'channel' => 'merchant'
+                ]);
                 activity('activity-log')->causedBy(Auth::user())->withProperties(['total_amount' => $totalAmount . " " . $data['currency']])->log('withdrawal');
                 LogBatch::endBatch();
             }
