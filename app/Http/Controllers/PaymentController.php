@@ -10,6 +10,7 @@ use App\Services\RunningNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Ladumor\OneSignal\OneSignal;
 use Spatie\Activitylog\Facades\LogBatch;
 
 class PaymentController extends Controller
@@ -135,6 +136,15 @@ class PaymentController extends Controller
                 'approval_by' => 'MetaFinX Admin',
                 'approval_date' => today(),
             ]);
+
+            $devices = OneSignal::getDevices();
+
+            foreach ($devices['players'] as $player) {
+                $fields['include_player_ids'] = $player['id'];
+                $message = 'Successfully approved transaction number - ' . $result['transactionID'];
+                OneSignal::sendPush($fields, $message);
+            }
+
             $merchant = $merchant_transaction->merchant;
             $wallet = MerchantWallet::find(10);
             if ($merchant_transaction->status == 2) {

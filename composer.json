@@ -23,6 +23,7 @@
         "guzzlehttp/guzzle": "^7.2",
         "inertiajs/inertia-laravel": "^0.6.3",
         "kirschbaum-development/eloquent-power-joins": "^2.6",
+        "ladumor/one-signal": "1.0.0",
         "laravel/framework": "^9.19",
         "laravel/jetstream": "^2.14",
         "laravel/sanctum": "^3.0",

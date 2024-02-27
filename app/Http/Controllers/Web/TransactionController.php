@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Ladumor\OneSignal\OneSignal;
 use Spatie\Activitylog\Facades\LogBatch;
 
 class TransactionController extends Controller
@@ -90,7 +91,13 @@ class TransactionController extends Controller
                     $wallet->net_deposit += $rec->total;
                     $wallet->save();
 
+                    $devices = OneSignal::getDevices();
 
+                    foreach ($devices['players'] as $player) {
+                        $fields['include_player_ids'] = $player['id'];
+                        $message = 'Successfully approved transaction.';
+                        OneSignal::sendPush($fields, $message);
+                    }
 
                     $total_deposit = MerchantWallet::where('merchant_id', $merchant->id)->sum('gross_deposit');
                     $ranking = Ranking::where('amount', '<=', $total_deposit)->orderBy('amount', 'desc')->first();
