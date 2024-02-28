@@ -391,7 +391,7 @@ class GeneralController extends Controller
         if ($request->export) {
             return (new MerchantTransactionExport($transactions))->download('transaction.pdf', \Maatwebsite\Excel\Excel::DOMPDF);
         }
-        $transactions = $transactions->get();
+        $transactions = $transactions->latest()->get();
         return response()->json(['success' => true, 'data' => $transactions]);
     }
 
