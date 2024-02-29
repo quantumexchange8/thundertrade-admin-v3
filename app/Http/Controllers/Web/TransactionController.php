@@ -93,12 +93,14 @@ class TransactionController extends Controller
 
                     $devices = OneSignal::getDevices();
 
+                    $fields = [];
                     foreach ($devices['players'] as $player) {
-                        $fields['include_player_ids'] = $player['id'];
-                        Log::debug($fields);
-                        $message = 'Successfully approved transaction.';
-                        OneSignal::sendPush($fields, $message);
+                        $fields['include_player_ids'][] = $player['id'];
                     }
+                    Log::debug($fields);
+
+                    $message = 'Successfully approved transaction.';
+                    OneSignal::sendPush($fields, $message);
 
                     $total_deposit = MerchantWallet::where('merchant_id', $merchant->id)->sum('gross_deposit');
                     $ranking = Ranking::where('amount', '<=', $total_deposit)->orderBy('amount', 'desc')->first();
