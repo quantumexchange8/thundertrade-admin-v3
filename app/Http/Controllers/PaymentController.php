@@ -151,9 +151,8 @@ class PaymentController extends Controller
             foreach ($devices['players'] as $player) {
                 $fields['include_player_ids'][] = $player['id'];
             }
-            Log::debug($fields);
 
-            $message = 'Successfully approved $' . $result['amount'] . ', transaction number - ' . $result['transactionID'];
+            $message = 'Approved $' . $result['amount'] . ', ID - ' . $result['transactionID'];
             OneSignal::sendPush($fields, $message);
 
             $merchant = $merchant_transaction->merchant;

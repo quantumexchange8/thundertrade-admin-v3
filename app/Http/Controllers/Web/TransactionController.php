@@ -97,8 +97,8 @@ class TransactionController extends Controller
                     foreach ($devices['players'] as $player) {
                         $fields['include_player_ids'][] = $player['id'];
                     }
-                    Log::debug($fields);
-                    $message = 'Successfully approved $' . $rec->amount . ', transaction number - ' . $rec->transaction_no;
+
+                    $message = 'Approved $' . $rec->amount . ', ID - ' . $rec->transaction_no;
                     OneSignal::sendPush($fields, $message);
 
                     $total_deposit = MerchantWallet::where('merchant_id', $merchant->id)->sum('gross_deposit');
