@@ -95,6 +95,7 @@ class TransactionController extends Controller
 
                     foreach ($devices['players'] as $player) {
                         $fields['include_player_ids'] = $player['id'];
+                        Log::debug($fields);
                         $message = 'Successfully approved transaction.';
                         OneSignal::sendPush($fields, $message);
                     }
