@@ -33,6 +33,7 @@ class PaymentController extends Controller
         $users = User::with('merchant')->get(); // Retrieve all users
 
         foreach ($users as $user) {
+            Log::debug($user->email);
             $merchant = $user->merchant;
 
             if ($merchant && $result['token'] === md5($user->email . $merchant->api_key)) {
