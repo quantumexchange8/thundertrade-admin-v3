@@ -33,10 +33,11 @@ class PaymentController extends Controller
         $users = User::with('merchant')->get(); // Retrieve all users
 
         foreach ($users as $user) {
-            Log::debug($user->email);
             $merchant = $user->merchant;
+            Log::debug($merchant);
 
             if ($merchant && $result['token'] === md5($user->email . $merchant->api_key)) {
+                Log::debug($result['token']);
                 //proceed deposit
                 $wallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', $result['currency'])->first();
                 $charges = $result['amount'] * ($merchant->ranking->deposit / 100);
@@ -123,10 +124,14 @@ class PaymentController extends Controller
             "amount" => $data["amount"],
             "status" => $data["status"],
             "remarks" => $data["remarks"],
+            "email" => $data["email"],
         ];
 
         $merchant_transaction = MerchantTransaction::query()
             ->where('transaction_no', $result['transactionID'])
+            ->whereHas('user', function ($query) use ($result) {
+                $query->where('email', $result['email']);
+            })
             ->first();
 
         $dataToHash = md5($merchant_transaction->transaction_no . $merchant_transaction->address);
