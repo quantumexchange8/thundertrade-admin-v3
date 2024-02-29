@@ -28,6 +28,8 @@ class PaymentController extends Controller
             "TxID" => $data['TxID'],
         ];
 
+        Log::debug($result);
+
         $users = User::with('merchant')->get(); // Retrieve all users
 
         foreach ($users as $user) {
