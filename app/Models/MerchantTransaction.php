@@ -14,9 +14,9 @@ class MerchantTransaction extends Model
 
     protected $guarded = [];
 
-    public function merchant()
+    public function merchant(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(Merchant::class, 'merchant_id');
+        return $this->belongsTo(Merchant::class, 'merchant_id', 'id');
     }
 
     public function wallet()

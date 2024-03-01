@@ -164,6 +164,8 @@ class PaymentController extends Controller
                     $wallet->net_deposit += $merchant_transaction->total;
                     $wallet->save();
 
+                    Log::debug($wallet);
+
                     $total_deposit = MerchantWallet::where('merchant_id', $merchant->id)->sum('gross_deposit');
                     $ranking = Ranking::where('amount', '<=', $total_deposit)->orderBy('amount', 'desc')->first();
                     if ($ranking) {

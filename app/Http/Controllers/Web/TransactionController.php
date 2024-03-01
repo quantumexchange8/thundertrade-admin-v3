@@ -86,6 +86,8 @@ class TransactionController extends Controller
             if ($request->status == 2) {
                 if ($rec->transaction_type == "deposit") {
 
+                    Log::debug($wallet);
+
                     $wallet->deposit_balance += $rec->amount;
                     $wallet->gross_deposit += $rec->amount;
                     $wallet->net_deposit += $rec->total;
