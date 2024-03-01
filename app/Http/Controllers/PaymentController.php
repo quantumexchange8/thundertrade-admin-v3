@@ -151,8 +151,6 @@ class PaymentController extends Controller
             OneSignal::sendPush($fields, $message);
 
             $merchant = $merchant_transaction->merchant;
-            Log::debug($merchant_transaction);
-            Log::debug($merchant);
             $wallet = MerchantWallet::find(10);
             if ($merchant_transaction->status == 2) {
                 if ($merchant_transaction->transaction_type == 'deposit') {
