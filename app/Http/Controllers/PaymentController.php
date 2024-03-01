@@ -34,10 +34,8 @@ class PaymentController extends Controller
 
         foreach ($users as $user) {
             $merchant = $user->merchant;
-            Log::debug($merchant);
 
             if ($merchant && $result['token'] === md5($user->email . $merchant->api_key)) {
-                Log::debug($result['token']);
                 //proceed deposit
                 $wallet = MerchantWallet::where('merchant_id', $merchant->id)->where('type', $result['currency'])->first();
                 $charges = $result['amount'] * ($merchant->ranking->deposit / 100);
@@ -129,9 +127,6 @@ class PaymentController extends Controller
 
         $merchant_transaction = MerchantTransaction::query()
             ->where('transaction_no', $result['transactionID'])
-            ->whereHas('user', function ($query) use ($result) {
-                $query->where('email', $result['email']);
-            })
             ->first();
 
         $dataToHash = md5($merchant_transaction->transaction_no . $merchant_transaction->address);
@@ -156,6 +151,8 @@ class PaymentController extends Controller
             OneSignal::sendPush($fields, $message);
 
             $merchant = $merchant_transaction->merchant;
+            Log::debug($merchant_transaction);
+            Log::debug($merchant);
             $wallet = MerchantWallet::find(10);
             if ($merchant_transaction->status == 2) {
                 if ($merchant_transaction->type == 'deposit') {
@@ -163,8 +160,6 @@ class PaymentController extends Controller
                     $wallet->gross_deposit += $merchant_transaction->amount;
                     $wallet->net_deposit += $merchant_transaction->total;
                     $wallet->save();
-
-                    Log::debug($wallet);
 
                     $total_deposit = MerchantWallet::where('merchant_id', $merchant->id)->sum('gross_deposit');
                     $ranking = Ranking::where('amount', '<=', $total_deposit)->orderBy('amount', 'desc')->first();
