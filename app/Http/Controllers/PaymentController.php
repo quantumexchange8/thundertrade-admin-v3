@@ -155,7 +155,7 @@ class PaymentController extends Controller
             Log::debug($merchant);
             $wallet = MerchantWallet::find(10);
             if ($merchant_transaction->status == 2) {
-                if ($merchant_transaction->type == 'deposit') {
+                if ($merchant_transaction->transaction_type == 'deposit') {
                     $wallet->deposit_balance += $merchant_transaction->amount;
                     $wallet->gross_deposit += $merchant_transaction->amount;
                     $wallet->net_deposit += $merchant_transaction->total;
@@ -168,7 +168,7 @@ class PaymentController extends Controller
                             $merchant->update(['ranking_id' => $ranking->id]);
                         }
                     }
-                } else if ($merchant_transaction->type == 'withdrawal') {
+                } else if ($merchant_transaction->transaction_type == 'withdrawal') {
                     $wallet->deposit_balance -= $merchant_transaction->amount;
                     $wallet->gross_withdrawal += $merchant_transaction->amount;
                     $wallet->net_withdrawal += $merchant_transaction->total;
