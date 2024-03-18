@@ -147,9 +147,6 @@ class PaymentController extends Controller
                 $fields['include_player_ids'][] = $player['id'];
             }
 
-            $message = 'Approved $' . $result['amount'] . ', ID - ' . $result['transactionID'];
-            OneSignal::sendPush($fields, $message);
-
             $merchant = $merchant_transaction->merchant;
             $wallet = MerchantWallet::find(10);
             if ($merchant_transaction->status == 2) {
@@ -172,7 +169,11 @@ class PaymentController extends Controller
                     $wallet->net_withdrawal += $merchant_transaction->total;
                     $wallet->save();
                 }
+                $message = 'Approved $' . $result['amount'] . ', ID - ' . $result['transactionID'];
+            } else {
+                $message = 'Rejected $' . $result['amount'] . ', ID - ' . $result['transactionID'];
             }
+            OneSignal::sendPush($fields, $message);
         }
 
         return response()->json(['success' => true, 'message' => 'Approval Success']);

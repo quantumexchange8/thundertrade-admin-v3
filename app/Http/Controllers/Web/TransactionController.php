@@ -83,6 +83,14 @@ class TransactionController extends Controller
             $wallet = MerchantWallet::find($rec->wallet_id);
             $merchant = $rec->merchant;
             LogBatch::startBatch();
+
+            $devices = OneSignal::getDevices();
+
+            $fields = [];
+            foreach ($devices['players'] as $player) {
+                $fields['include_player_ids'][] = $player['id'];
+            }
+
             if ($request->status == 2) {
                 if ($rec->transaction_type == "deposit") {
 
@@ -93,15 +101,7 @@ class TransactionController extends Controller
                     $wallet->net_deposit += $rec->total;
                     $wallet->save();
 
-                    $devices = OneSignal::getDevices();
-
-                    $fields = [];
-                    foreach ($devices['players'] as $player) {
-                        $fields['include_player_ids'][] = $player['id'];
-                    }
-
                     $message = 'Approved $' . $rec->amount . ', ID - ' . $rec->transaction_no;
-                    OneSignal::sendPush($fields, $message);
 
                     $total_deposit = MerchantWallet::where('merchant_id', $merchant->id)->sum('gross_deposit');
                     $ranking = Ranking::where('amount', '<=', $total_deposit)->orderBy('amount', 'desc')->first();
@@ -125,7 +125,10 @@ class TransactionController extends Controller
                     $wallet->save();
                 }
             } else if ($request->status == 1) {
+                $message = 'Rejected $' . $rec->amount . ', ID - ' . $rec->transaction_no;
             }
+
+            OneSignal::sendPush($fields, $message);
 
             $rec->update([
                 'status' => $request->status,
